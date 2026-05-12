@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KOCAELİ OSGB Teklif Sistemi</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body{
+      font-family: Arial;
+      background:#f4f4f4;
+      padding:20px;
+    }
+
+    .box{
+      background:white;
+      padding:20px;
+      border-radius:10px;
+      max-width:700px;
+      margin:auto;
+    }
+
+    input, select{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+    }
+
+    button{
+      padding:12px;
+      margin-top:15px;
+      width:100%;
+      cursor:pointer;
+    }
+
+    .hidden{
+      display:none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+
+  <h2>KOCAELİ OSGB Teklif Sistemi</h2>
+
+  <select id="typeSelect">
+    <option value="">Teklif Türü Seçin</option>
+    <option value="service">Hizmet Teklifi</option>
+    <option value="health">Tahlil Teklifi</option>
+  </select>
+
+  <div id="serviceArea" class="hidden">
+
+    <input type="text" id="serviceFirma" placeholder="Firma Adı">
+
+    <select id="dangerClass">
+      <option value="">Tehlike Sınıfı</option>
+      <option value="az">Az Tehlikeli</option>
+      <option value="tehlikeli">Tehlikeli</option>
+      <option value="cok">Çok Tehlikeli</option>
+    </select>
+
+    <input type="number" id="serviceCount" placeholder="Çalışan Sayısı">
+
+    <button onclick="createServiceOffer()">
+      Hizmet Teklifi Oluştur
+    </button>
+
+  </div>
+
+  <div id="healthArea" class="hidden">
+
+    <select id="healthType">
+      <option value="">Seçim Yapın</option>
+      <option value="company">Şirket</option>
+      <option value="person">Şahıs</option>
+    </select>
+
+    <div id="companyArea" class="hidden">
+
+      <input type="text" id="healthFirma" placeholder="Firma Adı">
+
+      <input type="number" id="healthCount" placeholder="Çalışan Sayısı">
+
+      <h3>Testler</h3>
+
+      <label><input type="checkbox" value="100" data-name="EKG"> EKG</label><br>
+      <label><input type="checkbox" value="110" data-name="SFT"> SFT</label><br>
+      <label><input type="checkbox" value="100" data-name="Oidio"> Oidio</label><br>
+      <label><input type="checkbox" value="110" data-name="Hemogram"> Hemogram</label><br>
+      <label><input type="checkbox" value="110" data-name="Akciğer"> Akciğer</label><br>
+      <label><input type="checkbox" value="90" data-name="TİT"> TİT</label><br>
+      <label><input type="checkbox" value="90" data-name="AKŞ"> AKŞ</label><br>
+      <label><input type="checkbox" value="110" data-name="Üre"> Üre</label><br>
+      <label><input type="checkbox" value="110" data-name="Kreatinin"> Kreatinin</label><br>
+      <label><input type="checkbox" value="110" data-name="AST"> AST</label><br>
+      <label><input type="checkbox" value="110" data-name="ALT"> ALT</label><br>
+      <label><input type="checkbox" value="110" data-name="HBS AG"> HBS AG</label><br>
+      <label><input type="checkbox" value="110" data-name="Anti HBS"> Anti HBS</label><br>
+      <label><input type="checkbox" value="110" data-name="Anti HIV"> Anti HIV</label><br>
+      <label><input type="checkbox" value="250" data-name="Tetanoz"> Tetanoz</label><br>
+      <label><input type="checkbox" value="400" data-name="Portör"> Portör</label><br>
+
+      <button onclick="createHealthOffer()">
+        Tahlil Teklifi Oluştur
+      </button>
+
+    </div>
+
+    <div id="personArea" class="hidden">
+
+      <input type="text" id="personName" placeholder="Ad Soyad">
+
+      <button onclick="createPersonOffer()">
+        Şahıs Teklifi Oluştur
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const typeSelect = document.getElementById("typeSelect");
+const serviceArea = document.getElementById("serviceArea");
+const healthArea = document.getElementById("healthArea");
+
+typeSelect.addEventListener("change", () => {
+
+  serviceArea.classList.add("hidden");
+  healthArea.classList.add("hidden");
+
+  if(typeSelect.value === "service"){
+    serviceArea.classList.remove("hidden");
+  }
+
+  if(typeSelect.value === "health"){
+    healthArea.classList.remove("hidden");
+  }
+
+});
+
+document.getElementById("healthType").addEventListener("change", function(){
+
+  document.getElementById("companyArea").classList.add("hidden");
+  document.getElementById("personArea").classList.add("hidden");
+
+  if(this.value === "company"){
+    document.getElementById("companyArea").classList.remove("hidden");
+  }
+
+  if(this.value === "person"){
+    document.getElementById("personArea").classList.remove("hidden");
+  }
+
+});
+
+function createServiceOffer(){
+
+  const firma = document.getElementById("serviceFirma").value;
+  const danger = document.getElementById("dangerClass").value;
+  const count = Number(document.getElementById("serviceCount").value);
+
+  let base = 0;
+  let extra = 0;
+
+  let uzman = 0;
+  let hekim = 0;
+
+  let dangerText = "";
+
+  if(danger === "az"){
+    base = 2500;
+    extra = 300;
+    uzman = 10;
+    hekim = 5;
+    dangerText = "Az Tehlikeli";
+  }
+
+  if(danger === "tehlikeli"){
+    base = 4000;
+    extra = 500;
+    uzman = 20;
+    hekim = 10;
+    dangerText = "Tehlikeli";
+  }
+
+  if(danger === "cok"){
+    base = 5000;
+    extra = 1000;
+    uzman = 40;
+    hekim = 15;
+    dangerText = "Çok Tehlikeli";
+  }
+
+  let total = base;
+
+  if(count > 5){
+    total += (count - 5) * extra;
+  }
+
+  const uzmanSure = count * uzman;
+  const hekimSure = count * hekim;
+
+  const year = new Date().getFullYear();
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text("KOCAELİ OSGB HİZMET TEKLİFİ", 20, 20);
+
+  doc.text("Firma: " + firma, 20, 40);
+  doc.text("Tehlike Sınıfı: " + dangerText, 20, 50);
+  doc.text("Çalışan Sayısı: " + count, 20, 60);
+
+  doc.text("Uzman Süresi: " + uzmanSure + " dk", 20, 70);
+  doc.text("Hekim Süresi: " + hekimSure + " dk", 20, 80);
+
+  doc.text("Aylık Ücret: " + total + " TL", 20, 100);
+
+  doc.text("Geçerlilik: 31/12/" + year, 20, 110);
+
+  doc.save("hizmet_teklifi.pdf");
+
+}
+
+function createHealthOffer(){
+
+  const firma = document.getElementById("healthFirma").value;
+  const count = Number(document.getElementById("healthCount").value);
+
+  let total = 0;
+
+  const selected = [];
+
+  document.querySelectorAll("#companyArea input[type=checkbox]:checked")
+    .forEach(item => {
+
+      const price = Number(item.value);
+
+      total += price;
+
+      selected.push(
+        item.dataset.name + " - " + price + " TL"
+      );
+
+    });
+
+  total = total * count;
+
+  const date = new Date();
+
+  date.setMonth(date.getMonth() + 1);
+
+  const finalDate =
+    date.toLocaleDateString("tr-TR");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text("KOCAELİ OSGB TAHLİL TEKLİFİ", 20, 20);
+
+  doc.text("Firma: " + firma, 20, 40);
+  doc.text("Çalışan Sayısı: " + count, 20, 50);
+
+  let y = 70;
+
+  selected.forEach(item => {
+
+    doc.text(item, 20, y);
+
+    y += 10;
+
+  });
+
+  doc.text("Toplam: " + total + " TL", 20, y + 20);
+
+  doc.text("Geçerlilik: " + finalDate, 20, y + 35);
+
+  doc.save("tahlil_teklifi.pdf");
+
+}
+
+function createPersonOffer(){
+
+  const name = document.getElementById("personName").value;
+
+  const date = new Date();
+
+  date.setMonth(date.getMonth() + 1);
+
+  const finalDate =
+    date.toLocaleDateString("tr-TR");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text("KOCAELİ OSGB ŞAHIS SAĞLIK TEKLİFİ", 20, 20);
+
+  doc.text("Ad Soyad: " + name, 20, 40);
+
+  doc.text("FULL Paket", 20, 60);
+
+  doc.text("EKG", 20, 70);
+  doc.text("SFT", 20, 80);
+  doc.text("Oidio", 20, 90);
+  doc.text("Hemogram", 20, 100);
+  doc.text("Akciğer", 20, 110);
+  doc.text("TİT", 20, 120);
+  doc.text("AKŞ", 20, 130);
+
+  doc.text("Toplam: 1350 TL", 20, 150);
+
+  doc.text("Geçerlilik: " + finalDate, 20, 165);
+
+  doc.save("sahis_teklifi.pdf");
+
+}
+
+</script>
+
+</body>
+</html>
