@@ -147,13 +147,22 @@ h1,h2,h3{
 
         <h3 style="margin-top:20px;">Testler</h3>
 
-        <label><input type="checkbox" class="personTest"> EKG</label><br>
-        <label><input type="checkbox" class="personTest"> SFT</label><br>
-        <label><input type="checkbox" class="personTest"> Oidio</label><br>
-        <label><input type="checkbox" class="personTest"> Hemogram</label><br>
-        <label><input type="checkbox" class="personTest"> Akciğer</label><br>
-        <label><input type="checkbox" class="personTest"> TİT</label><br>
-        <label><input type="checkbox" class="personTest"> AKŞ</label><br>
+        <label><input type="checkbox" class="personTest" value="100"> EKG</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> SFT</label><br>
+        <label><input type="checkbox" class="personTest" value="100"> Oidio</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> Hemogram</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> Akciğer</label><br>
+        <label><input type="checkbox" class="personTest" value="90"> TİT</label><br>
+        <label><input type="checkbox" class="personTest" value="90"> AKŞ</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> Üre</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> Kreatinin</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> AST</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> ALT</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> HBS AG</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> Anti HBS</label><br>
+        <label><input type="checkbox" class="personTest" value="110"> Anti HIV</label><br>
+        <label><input type="checkbox" class="personTest" value="250"> Tetanoz</label><br>
+        <label><input type="checkbox" class="personTest" value="400"> Portör</label><br>
 
         <button onclick="createPersonOffer()">
             Şahıs Teklifi Oluştur
@@ -382,8 +391,10 @@ function createPersonOffer(){
     const name =
         document.getElementById("personName").value;
 
-    const selectedCount =
-        document.querySelectorAll(".personTest:checked").length;
+    const checked =
+        document.querySelectorAll(".personTest:checked");
+
+    const selectedCount = checked.length;
 
     let total = 0;
 
@@ -393,7 +404,15 @@ function createPersonOffer(){
     if(selectedCount === 4) total = 900;
     if(selectedCount === 5) total = 1000;
     if(selectedCount === 6) total = 1150;
-    if(selectedCount >= 7) total = 1350;
+    if(selectedCount === 7) total = 1350;
+
+    if(selectedCount >= 8){
+
+        checked.forEach(item=>{
+            total += Number(item.value);
+        });
+
+    }
 
     const date = new Date();
 
