@@ -65,10 +65,6 @@ th,td{
     text-align:left;
 }
 
-h1,h2,h3{
-    margin:0;
-}
-
 </style>
 </head>
 <body>
@@ -118,22 +114,7 @@ h1,h2,h3{
 
         <h3 style="margin-top:20px;">Testler</h3>
 
-        <label><input type="checkbox" value="100"> EKG</label><br>
-        <label><input type="checkbox" value="110"> SFT</label><br>
-        <label><input type="checkbox" value="100"> Oidio</label><br>
-        <label><input type="checkbox" value="110"> Hemogram</label><br>
-        <label><input type="checkbox" value="110"> Akciğer</label><br>
-        <label><input type="checkbox" value="90"> TİT</label><br>
-        <label><input type="checkbox" value="90"> AKŞ</label><br>
-        <label><input type="checkbox" value="110"> Üre</label><br>
-        <label><input type="checkbox" value="110"> Kreatinin</label><br>
-        <label><input type="checkbox" value="110"> AST</label><br>
-        <label><input type="checkbox" value="110"> ALT</label><br>
-        <label><input type="checkbox" value="110"> HBS AG</label><br>
-        <label><input type="checkbox" value="110"> Anti HBS</label><br>
-        <label><input type="checkbox" value="110"> Anti HIV</label><br>
-        <label><input type="checkbox" value="250"> Tetanoz</label><br>
-        <label><input type="checkbox" value="400"> Portör</label><br>
+        <div id="companyTests"></div>
 
         <button onclick="createCompanyHealthOffer()">
             Teklif Oluştur
@@ -147,22 +128,7 @@ h1,h2,h3{
 
         <h3 style="margin-top:20px;">Testler</h3>
 
-        <label><input type="checkbox" class="personTest" value="100"> EKG</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> SFT</label><br>
-        <label><input type="checkbox" class="personTest" value="100"> Oidio</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> Hemogram</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> Akciğer</label><br>
-        <label><input type="checkbox" class="personTest" value="90"> TİT</label><br>
-        <label><input type="checkbox" class="personTest" value="90"> AKŞ</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> Üre</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> Kreatinin</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> AST</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> ALT</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> HBS AG</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> Anti HBS</label><br>
-        <label><input type="checkbox" class="personTest" value="110"> Anti HIV</label><br>
-        <label><input type="checkbox" class="personTest" value="250"> Tetanoz</label><br>
-        <label><input type="checkbox" class="personTest" value="400"> Portör</label><br>
+        <div id="personTests"></div>
 
         <button onclick="createPersonOffer()">
             Şahıs Teklifi Oluştur
@@ -182,11 +148,91 @@ PDF İndir
 
 <script>
 
-const mainType = document.getElementById("mainType");
-const serviceArea = document.getElementById("serviceArea");
-const healthArea = document.getElementById("healthArea");
+const SHEET_URL =
+"https://docs.google.com/spreadsheets/d/1ZMFPlQMFzsPzVxFTEJUPVorKZQwmX6hv/export?format=csv";
 
-mainType.addEventListener("change", function(){
+let PRICES = {};
+
+const TEST_KEYS = [
+    ["EKG","test_ekg"],
+    ["SFT","test_sft"],
+    ["Oidio","test_oidio"],
+    ["Hemogram","test_hemogram"],
+    ["Akciğer","test_akciger"],
+    ["TİT","test_tit"],
+    ["AKŞ","test_aks"],
+    ["Üre","test_ure"],
+    ["Kreatinin","test_kreatinin"],
+    ["AST","test_ast"],
+    ["ALT","test_alt"],
+    ["HBS AG","test_hbsag"],
+    ["Anti HBS","test_antihbs"],
+    ["Anti HIV","test_antihiv"],
+    ["Tetanoz","test_tetanoz"],
+    ["Portör","test_portor"]
+];
+
+async function loadPrices(){
+
+    const response = await fetch(SHEET_URL);
+
+    const text = await response.text();
+
+    const rows = text.split("\n");
+
+    rows.slice(1).forEach(row=>{
+
+        const cols = row.split(",");
+
+        if(cols.length >= 2){
+
+            PRICES[cols[0].trim()] =
+            Number(cols[1].trim());
+
+        }
+
+    });
+
+    createTests();
+
+}
+
+function createTests(){
+
+    let html = "";
+
+    TEST_KEYS.forEach(test=>{
+
+        html += `
+        <label>
+        <input type="checkbox"
+        class="testItem"
+        data-key="${test[1]}"
+        value="${test[1]}">
+        ${test[0]}
+        </label><br>
+        `;
+
+    });
+
+    document.getElementById("companyTests").innerHTML = html;
+
+    document.getElementById("personTests").innerHTML = html;
+
+}
+
+loadPrices();
+
+const mainType =
+document.getElementById("mainType");
+
+const serviceArea =
+document.getElementById("serviceArea");
+
+const healthArea =
+document.getElementById("healthArea");
+
+mainType.addEventListener("change",function(){
 
     serviceArea.classList.add("hidden");
     healthArea.classList.add("hidden");
@@ -201,26 +247,37 @@ mainType.addEventListener("change", function(){
 
 });
 
-document.getElementById("healthType").addEventListener("change", function(){
+document.getElementById("healthType")
+.addEventListener("change",function(){
 
-    document.getElementById("companyArea").classList.add("hidden");
-    document.getElementById("personArea").classList.add("hidden");
+    document.getElementById("companyArea")
+    .classList.add("hidden");
+
+    document.getElementById("personArea")
+    .classList.add("hidden");
 
     if(this.value === "company"){
-        document.getElementById("companyArea").classList.remove("hidden");
+        document.getElementById("companyArea")
+        .classList.remove("hidden");
     }
 
     if(this.value === "person"){
-        document.getElementById("personArea").classList.remove("hidden");
+        document.getElementById("personArea")
+        .classList.remove("hidden");
     }
 
 });
 
 function createServiceOffer(){
 
-    const firma = document.getElementById("serviceFirma").value;
-    const danger = document.getElementById("dangerClass").value;
-    const count = Number(document.getElementById("serviceCount").value);
+    const firma =
+    document.getElementById("serviceFirma").value;
+
+    const danger =
+    document.getElementById("dangerClass").value;
+
+    const count =
+    Number(document.getElementById("serviceCount").value);
 
     let base = 0;
     let extra = 0;
@@ -231,79 +288,102 @@ function createServiceOffer(){
     let dangerText = "";
 
     if(danger === "az"){
-        base = 2500;
-        extra = 300;
+
+        base = PRICES["hizmet_az_tehlikeli_sabit"];
+        extra = PRICES["hizmet_az_tehlikeli_ek"];
+
         uzman = 10;
         hekim = 5;
+
         dangerText = "Az Tehlikeli";
+
     }
 
     if(danger === "tehlikeli"){
-        base = 4000;
-        extra = 500;
+
+        base = PRICES["hizmet_tehlikeli_sabit"];
+        extra = PRICES["hizmet_tehlikeli_ek"];
+
         uzman = 20;
         hekim = 10;
+
         dangerText = "Tehlikeli";
+
     }
 
     if(danger === "cok"){
-        base = 5000;
-        extra = 1000;
+
+        base = PRICES["hizmet_cok_tehlikeli_sabit"];
+        extra = PRICES["hizmet_cok_tehlikeli_ek"];
+
         uzman = 40;
         hekim = 15;
+
         dangerText = "Çok Tehlikeli";
+
     }
 
     let total = base;
 
     if(count > 5){
-        total += (count - 5) * extra;
+
+        total +=
+        (count - 5) * extra;
+
     }
 
-    const uzmanSure = count * uzman;
-    const hekimSure = count * hekim;
+    const uzmanSure =
+    count * uzman;
 
-    const year = new Date().getFullYear();
+    const hekimSure =
+    count * hekim;
 
-    document.getElementById("offerPreview").innerHTML = `
-        <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ HİZMET TEKLİFİ</h1>
+    const year =
+    new Date().getFullYear();
 
-        <table>
-            <tr>
-                <th>Firma</th>
-                <td>${firma}</td>
-            </tr>
+    document.getElementById("offerPreview")
+    .innerHTML = `
 
-            <tr>
-                <th>Tehlike Sınıfı</th>
-                <td>${dangerText}</td>
-            </tr>
+    <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ HİZMET TEKLİFİ</h1>
 
-            <tr>
-                <th>Çalışan Sayısı</th>
-                <td>${count}</td>
-            </tr>
+    <table>
 
-            <tr>
-                <th>Uzman Süresi</th>
-                <td>${uzmanSure} dk</td>
-            </tr>
+    <tr>
+    <th>Firma</th>
+    <td>${firma}</td>
+    </tr>
 
-            <tr>
-                <th>Hekim Süresi</th>
-                <td>${hekimSure} dk</td>
-            </tr>
+    <tr>
+    <th>Tehlike Sınıfı</th>
+    <td>${dangerText}</td>
+    </tr>
 
-            <tr>
-                <th>Aylık Ücret</th>
-                <td>${total} TL</td>
-            </tr>
+    <tr>
+    <th>Çalışan Sayısı</th>
+    <td>${count}</td>
+    </tr>
 
-            <tr>
-                <th>Geçerlilik</th>
-                <td>31/12/${year}</td>
-            </tr>
-        </table>
+    <tr>
+    <th>Uzman Süresi</th>
+    <td>${uzmanSure} dk</td>
+    </tr>
+
+    <tr>
+    <th>Hekim Süresi</th>
+    <td>${hekimSure} dk</td>
+    </tr>
+
+    <tr>
+    <th>Aylık Ücret</th>
+    <td>${total} TL</td>
+    </tr>
+
+    <tr>
+    <th>Geçerlilik</th>
+    <td>31/12/${year}</td>
+    </tr>
+
+    </table>
     `;
 
     showPreview();
@@ -312,74 +392,81 @@ function createServiceOffer(){
 
 function createCompanyHealthOffer(){
 
-    const firma = document.getElementById("healthFirma").value;
-    const count = Number(document.getElementById("healthCount").value);
+    const firma =
+    document.getElementById("healthFirma").value;
+
+    const count =
+    Number(document.getElementById("healthCount").value);
 
     const checked =
-        document.querySelectorAll("#companyArea input[type=checkbox]:checked");
+    document.querySelectorAll(
+    "#companyArea .testItem:checked"
+    );
 
-    const selectedCount = checked.length;
+    const selectedCount =
+    checked.length;
 
     let personPrice = 0;
 
     if(count < 10){
 
-        if(selectedCount === 1) personPrice = 400;
-        if(selectedCount === 2) personPrice = 500;
-        if(selectedCount === 3) personPrice = 750;
-        if(selectedCount === 4) personPrice = 900;
-        if(selectedCount === 5) personPrice = 1000;
-        if(selectedCount === 6) personPrice = 1150;
-        if(selectedCount >= 7) personPrice = 1350;
+        personPrice =
+        PRICES["paket_" + selectedCount + "_test"] || 0;
 
     }else{
 
         checked.forEach(item=>{
-            personPrice += Number(item.value);
+
+            personPrice +=
+            PRICES[item.dataset.key];
+
         });
 
     }
 
-    const total = personPrice * count;
+    const total =
+    personPrice * count;
 
     const date = new Date();
 
     date.setMonth(date.getMonth() + 1);
 
     const finalDate =
-        date.toLocaleDateString("tr-TR");
+    date.toLocaleDateString("tr-TR");
 
-    document.getElementById("offerPreview").innerHTML = `
-        <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ TAHLİL TEKLİFİ</h1>
+    document.getElementById("offerPreview")
+    .innerHTML = `
 
-        <table>
+    <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ TAHLİL TEKLİFİ</h1>
 
-            <tr>
-                <th>Firma</th>
-                <td>${firma}</td>
-            </tr>
+    <table>
 
-            <tr>
-                <th>Çalışan Sayısı</th>
-                <td>${count}</td>
-            </tr>
+    <tr>
+    <th>Firma</th>
+    <td>${firma}</td>
+    </tr>
 
-            <tr>
-                <th>Kişi Başı Ücret</th>
-                <td>${personPrice} TL</td>
-            </tr>
+    <tr>
+    <th>Çalışan Sayısı</th>
+    <td>${count}</td>
+    </tr>
 
-            <tr>
-                <th>Toplam Tutar</th>
-                <td>${total} TL</td>
-            </tr>
+    <tr>
+    <th>Kişi Başı Ücret</th>
+    <td>${personPrice} TL</td>
+    </tr>
 
-            <tr>
-                <th>Geçerlilik</th>
-                <td>${finalDate}</td>
-            </tr>
+    <tr>
+    <th>Toplam Tutar</th>
+    <td>${total} TL</td>
+    </tr>
 
-        </table>
+    <tr>
+    <th>Geçerlilik</th>
+    <td>${finalDate}</td>
+    </tr>
+
+    </table>
     `;
 
     showPreview();
@@ -389,27 +476,30 @@ function createCompanyHealthOffer(){
 function createPersonOffer(){
 
     const name =
-        document.getElementById("personName").value;
+    document.getElementById("personName").value;
 
     const checked =
-        document.querySelectorAll(".personTest:checked");
+    document.querySelectorAll(
+    "#personArea .testItem:checked"
+    );
 
-    const selectedCount = checked.length;
+    const selectedCount =
+    checked.length;
 
     let total = 0;
 
-    if(selectedCount === 1) total = 400;
-    if(selectedCount === 2) total = 500;
-    if(selectedCount === 3) total = 750;
-    if(selectedCount === 4) total = 900;
-    if(selectedCount === 5) total = 1000;
-    if(selectedCount === 6) total = 1150;
-    if(selectedCount === 7) total = 1350;
+    if(selectedCount <= 7){
 
-    if(selectedCount >= 8){
+        total =
+        PRICES["paket_" + selectedCount + "_test"] || 0;
+
+    }else{
 
         checked.forEach(item=>{
-            total += Number(item.value);
+
+            total +=
+            PRICES[item.dataset.key];
+
         });
 
     }
@@ -419,34 +509,36 @@ function createPersonOffer(){
     date.setMonth(date.getMonth() + 1);
 
     const finalDate =
-        date.toLocaleDateString("tr-TR");
+    date.toLocaleDateString("tr-TR");
 
-    document.getElementById("offerPreview").innerHTML = `
-        <h1>ŞAHIS SAĞLIK TEKLİFİ</h1>
+    document.getElementById("offerPreview")
+    .innerHTML = `
 
-        <table>
+    <h1>ŞAHIS SAĞLIK TEKLİFİ</h1>
 
-            <tr>
-                <th>Ad Soyad</th>
-                <td>${name}</td>
-            </tr>
+    <table>
 
-            <tr>
-                <th>Seçilen Test Sayısı</th>
-                <td>${selectedCount}</td>
-            </tr>
+    <tr>
+    <th>Ad Soyad</th>
+    <td>${name}</td>
+    </tr>
 
-            <tr>
-                <th>Toplam Tutar</th>
-                <td>${total} TL</td>
-            </tr>
+    <tr>
+    <th>Seçilen Test Sayısı</th>
+    <td>${selectedCount}</td>
+    </tr>
 
-            <tr>
-                <th>Geçerlilik</th>
-                <td>${finalDate}</td>
-            </tr>
+    <tr>
+    <th>Toplam Tutar</th>
+    <td>${total} TL</td>
+    </tr>
 
-        </table>
+    <tr>
+    <th>Geçerlilik</th>
+    <td>${finalDate}</td>
+    </tr>
+
+    </table>
     `;
 
     showPreview();
@@ -456,35 +548,38 @@ function createPersonOffer(){
 function showPreview(){
 
     document.getElementById("offerPreview")
-        .classList.remove("hidden");
+    .classList.remove("hidden");
 
     document.getElementById("pdfButton")
-        .classList.remove("hidden");
+    .classList.remove("hidden");
 
 }
 
 async function downloadPDF(){
 
     const element =
-        document.getElementById("offerPreview");
+    document.getElementById("offerPreview");
 
-    const canvas = await html2canvas(element,{
+    const canvas =
+    await html2canvas(element,{
         scale:2
     });
 
     const imgData =
-        canvas.toDataURL("image/png");
+    canvas.toDataURL("image/png");
 
-    const { jsPDF } = window.jspdf;
+    const { jsPDF } =
+    window.jspdf;
 
     const pdf =
-        new jsPDF("p","mm","a4");
+    new jsPDF("p","mm","a4");
 
     const pdfWidth =
-        pdf.internal.pageSize.getWidth();
+    pdf.internal.pageSize.getWidth();
 
     const pdfHeight =
-        (canvas.height * pdfWidth) / canvas.width;
+    (canvas.height * pdfWidth)
+    / canvas.width;
 
     pdf.addImage(
         imgData,
