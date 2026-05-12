@@ -65,6 +65,13 @@ th,td{
     text-align:left;
 }
 
+.discountBox{
+    margin-top:20px;
+    padding:15px;
+    background:#f7f7f7;
+    border:1px solid #ddd;
+}
+
 </style>
 </head>
 <body>
@@ -140,6 +147,11 @@ th,td{
 
 <div id="offerPreview" class="offer hidden"></div>
 
+<div id="discountArea" class="discountBox hidden">
+    <label>İndirim yap:</label>
+    <input type="number" id="discountInput" placeholder="İndirim tutarı TL" oninput="applyDiscount()">
+</div>
+
 <button id="pdfButton" class="hidden" onclick="downloadPDF()">
 PDF İndir
 </button>
@@ -152,6 +164,7 @@ const SHEET_URL =
 "https://docs.google.com/spreadsheets/d/1ZMFPlQMFzsPzVxFTEJUPVorKZQwmX6hv/export?format=csv";
 
 let PRICES = {};
+let CURRENT_OFFER = null;
 
 const TEST_KEYS = [
     ["EKG","test_ekg"],
@@ -237,6 +250,10 @@ mainType.addEventListener("change",function(){
     serviceArea.classList.add("hidden");
     healthArea.classList.add("hidden");
 
+    document.getElementById("offerPreview").classList.add("hidden");
+    document.getElementById("pdfButton").classList.add("hidden");
+    document.getElementById("discountArea").classList.add("hidden");
+
     if(this.value === "service"){
         serviceArea.classList.remove("hidden");
     }
@@ -255,6 +272,10 @@ document.getElementById("healthType")
 
     document.getElementById("personArea")
     .classList.add("hidden");
+
+    document.getElementById("offerPreview").classList.add("hidden");
+    document.getElementById("pdfButton").classList.add("hidden");
+    document.getElementById("discountArea").classList.add("hidden");
 
     if(this.value === "company"){
         document.getElementById("companyArea")
@@ -341,51 +362,19 @@ function createServiceOffer(){
     const year =
     new Date().getFullYear();
 
-    document.getElementById("offerPreview")
-    .innerHTML = `
+    CURRENT_OFFER = {
+        type: "service",
+        firma: firma,
+        dangerText: dangerText,
+        count: count,
+        uzmanSure: uzmanSure,
+        hekimSure: hekimSure,
+        total: total,
+        finalTotal: total,
+        validDate: "31/12/" + year
+    };
 
-    <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ HİZMET TEKLİFİ</h1>
-
-    <table>
-
-    <tr>
-    <th>Firma</th>
-    <td>${firma}</td>
-    </tr>
-
-    <tr>
-    <th>Tehlike Sınıfı</th>
-    <td>${dangerText}</td>
-    </tr>
-
-    <tr>
-    <th>Çalışan Sayısı</th>
-    <td>${count}</td>
-    </tr>
-
-    <tr>
-    <th>Uzman Süresi</th>
-    <td>${uzmanSure} dk</td>
-    </tr>
-
-    <tr>
-    <th>Hekim Süresi</th>
-    <td>${hekimSure} dk</td>
-    </tr>
-
-    <tr>
-    <th>Aylık Ücret</th>
-    <td>${total} TL</td>
-    </tr>
-
-    <tr>
-    <th>Geçerlilik</th>
-    <td>31/12/${year}</td>
-    </tr>
-
-    </table>
-    `;
-
+    renderOffer();
     showPreview();
 
 }
@@ -434,41 +423,17 @@ function createCompanyHealthOffer(){
     const finalDate =
     date.toLocaleDateString("tr-TR");
 
-    document.getElementById("offerPreview")
-    .innerHTML = `
+    CURRENT_OFFER = {
+        type: "companyHealth",
+        firma: firma,
+        count: count,
+        personPrice: personPrice,
+        total: total,
+        finalTotal: total,
+        validDate: finalDate
+    };
 
-    <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ TAHLİL TEKLİFİ</h1>
-
-    <table>
-
-    <tr>
-    <th>Firma</th>
-    <td>${firma}</td>
-    </tr>
-
-    <tr>
-    <th>Çalışan Sayısı</th>
-    <td>${count}</td>
-    </tr>
-
-    <tr>
-    <th>Kişi Başı Ücret</th>
-    <td>${personPrice} TL</td>
-    </tr>
-
-    <tr>
-    <th>Toplam Tutar</th>
-    <td>${total} TL</td>
-    </tr>
-
-    <tr>
-    <th>Geçerlilik</th>
-    <td>${finalDate}</td>
-    </tr>
-
-    </table>
-    `;
-
+    renderOffer();
     showPreview();
 
 }
@@ -511,37 +476,172 @@ function createPersonOffer(){
     const finalDate =
     date.toLocaleDateString("tr-TR");
 
-    document.getElementById("offerPreview")
-    .innerHTML = `
+    CURRENT_OFFER = {
+        type: "personHealth",
+        name: name,
+        selectedCount: selectedCount,
+        total: total,
+        finalTotal: total,
+        validDate: finalDate
+    };
 
-    <h1>ŞAHIS SAĞLIK TEKLİFİ</h1>
-
-    <table>
-
-    <tr>
-    <th>Ad Soyad</th>
-    <td>${name}</td>
-    </tr>
-
-    <tr>
-    <th>Seçilen Test Sayısı</th>
-    <td>${selectedCount}</td>
-    </tr>
-
-    <tr>
-    <th>Toplam Tutar</th>
-    <td>${total} TL</td>
-    </tr>
-
-    <tr>
-    <th>Geçerlilik</th>
-    <td>${finalDate}</td>
-    </tr>
-
-    </table>
-    `;
-
+    renderOffer();
     showPreview();
+
+}
+
+function applyDiscount(){
+
+    if(!CURRENT_OFFER){
+        return;
+    }
+
+    const discount =
+    Number(document.getElementById("discountInput").value) || 0;
+
+    let finalTotal =
+    CURRENT_OFFER.total - discount;
+
+    if(finalTotal < 0){
+        finalTotal = 0;
+    }
+
+    CURRENT_OFFER.finalTotal = finalTotal;
+
+    renderOffer();
+
+}
+
+function renderOffer(){
+
+    if(!CURRENT_OFFER){
+        return;
+    }
+
+    if(CURRENT_OFFER.type === "service"){
+
+        document.getElementById("offerPreview")
+        .innerHTML = `
+
+        <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ HİZMET TEKLİFİ</h1>
+
+        <table>
+
+        <tr>
+        <th>Firma</th>
+        <td>${CURRENT_OFFER.firma}</td>
+        </tr>
+
+        <tr>
+        <th>Tehlike Sınıfı</th>
+        <td>${CURRENT_OFFER.dangerText}</td>
+        </tr>
+
+        <tr>
+        <th>Çalışan Sayısı</th>
+        <td>${CURRENT_OFFER.count}</td>
+        </tr>
+
+        <tr>
+        <th>Uzman Süresi</th>
+        <td>${CURRENT_OFFER.uzmanSure} dk</td>
+        </tr>
+
+        <tr>
+        <th>Hekim Süresi</th>
+        <td>${CURRENT_OFFER.hekimSure} dk</td>
+        </tr>
+
+        <tr>
+        <th>Aylık Ücret</th>
+        <td>${CURRENT_OFFER.finalTotal} TL</td>
+        </tr>
+
+        <tr>
+        <th>Geçerlilik</th>
+        <td>${CURRENT_OFFER.validDate}</td>
+        </tr>
+
+        </table>
+        `;
+
+    }
+
+    if(CURRENT_OFFER.type === "companyHealth"){
+
+        const shownPersonPrice =
+        Math.round(CURRENT_OFFER.finalTotal / CURRENT_OFFER.count);
+
+        document.getElementById("offerPreview")
+        .innerHTML = `
+
+        <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ TAHLİL TEKLİFİ</h1>
+
+        <table>
+
+        <tr>
+        <th>Firma</th>
+        <td>${CURRENT_OFFER.firma}</td>
+        </tr>
+
+        <tr>
+        <th>Çalışan Sayısı</th>
+        <td>${CURRENT_OFFER.count}</td>
+        </tr>
+
+        <tr>
+        <th>Kişi Başı Ücret</th>
+        <td>${shownPersonPrice} TL</td>
+        </tr>
+
+        <tr>
+        <th>Toplam Tutar</th>
+        <td>${CURRENT_OFFER.finalTotal} TL</td>
+        </tr>
+
+        <tr>
+        <th>Geçerlilik</th>
+        <td>${CURRENT_OFFER.validDate}</td>
+        </tr>
+
+        </table>
+        `;
+
+    }
+
+    if(CURRENT_OFFER.type === "personHealth"){
+
+        document.getElementById("offerPreview")
+        .innerHTML = `
+
+        <h1>ŞAHIS SAĞLIK TEKLİFİ</h1>
+
+        <table>
+
+        <tr>
+        <th>Ad Soyad</th>
+        <td>${CURRENT_OFFER.name}</td>
+        </tr>
+
+        <tr>
+        <th>Seçilen Test Sayısı</th>
+        <td>${CURRENT_OFFER.selectedCount}</td>
+        </tr>
+
+        <tr>
+        <th>Toplam Tutar</th>
+        <td>${CURRENT_OFFER.finalTotal} TL</td>
+        </tr>
+
+        <tr>
+        <th>Geçerlilik</th>
+        <td>${CURRENT_OFFER.validDate}</td>
+        </tr>
+
+        </table>
+        `;
+
+    }
 
 }
 
@@ -552,6 +652,11 @@ function showPreview(){
 
     document.getElementById("pdfButton")
     .classList.remove("hidden");
+
+    document.getElementById("discountArea")
+    .classList.remove("hidden");
+
+    document.getElementById("discountInput").value = "";
 
 }
 
